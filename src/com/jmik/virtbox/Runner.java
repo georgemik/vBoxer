@@ -5,15 +5,6 @@ import java.util.*;
  */
 public class Runner {
 	public static void main (String[] args) {
-//		VirtualMachine vm = new VirtualMachine("ahoj");
-//
-//
-//
-//		System.out.println(vm.getSnapshotByName("snap1"));
-//		System.out.println(vm.getSnapshotByName("snap5"));
-
-//		System.out.print(System.getProperty("os.name"));
-//		System.getProperties().list(System.out);
 
 		Hypervisor vbox = new Hypervisor();
 
