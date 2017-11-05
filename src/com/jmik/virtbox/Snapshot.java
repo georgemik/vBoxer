@@ -1,7 +1,7 @@
 package com.jmik.virtbox;
 
 /**
- * Created by georgino on 27.8.2017.
+ * Created by georgemik on 27.8.2017.
  */
 
 public class Snapshot {

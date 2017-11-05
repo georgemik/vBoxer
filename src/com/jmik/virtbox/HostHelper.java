@@ -6,13 +6,13 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 /**
- * Created by georgino on 25.10.2017.
+ * Created by georgemik on 25.10.2017.
  */
 public class HostHelper {
 
 	private static String vboxMng;
 	private static String WINDOWS_VBOXMANAGE_PATH = "c:\\Program Files\\Oracle\\VirtualBox\\vboxmanage.exe";
-	private static String LINUX_VBOXMANAGE_PATH = "linuxPath";
+	private static String LINUX_VBOXMANAGE_PATH = "linuxPathToBeAdded";
 
 
 

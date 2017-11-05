@@ -10,13 +10,15 @@ public class VirtualMachine {
 	private String name;
 	private String id;
 	private ArrayList<Snapshot> snapshotz;
+	private String state;
+	private StringBuffer vmInfo;
 
 	public VirtualMachine(String vmName, String id){
 		name = vmName;
 		this.id = id;
 		snapshotz = setAllSnapshots();
-//		TODO create constructor where info about snapshots is gathered
-
+		vmInfo = getVmInfo();
+		setState();
 	}
 
 
@@ -113,6 +115,46 @@ public class VirtualMachine {
 			}
 		}
 		return null;
+	}
+
+	private StringBuffer getVmInfo(){
+		StringBuffer infoStdout = new StringBuffer();
+
+		try{
+			infoStdout = host.runSystemCommand(Arrays.asList(host.getVboxManagePath(), "showvminfo", id, "--machinereadable"));
+		}catch (IllegalFormatException e){
+			System.out.println("ERROR: System command '" + host.getVboxManagePath() + " showvminfo " + id + " --machinereadable' cannot be executed");
+			e.printStackTrace();
+			System.exit(1);
+		}
+		return infoStdout;
+	}
+
+	private void setState(){
+		if(vmInfo == null){
+			return;
+		}
+//		TODO investigate why this property is not true from vboxmanage output????
+		String stateRegex = "VMState=\"(\\w+)\"";
+		Matcher match = Pattern.compile(stateRegex).matcher(vmInfo);
+		if(match.find()){
+			state = match.group(1);
+		}
+	}
+
+	public String getVmState(){
+		if (state == null || state.isEmpty()){
+			return "";
+		}
+		return state;
+	}
+
+	public boolean isVmStarted(){
+		switch (state){
+			case ("poweroff"): { 	return false; 	}
+			case ("poweron") : {	return true;	}
+			default: return false;
+		}
 	}
 
 

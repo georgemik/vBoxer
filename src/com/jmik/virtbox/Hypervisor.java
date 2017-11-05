@@ -7,20 +7,20 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * Created by georgino on 25.10.2017.
+ * Created by georgemik on 25.10.2017.
  */
 
 
 public class Hypervisor {
 	private HostHelper host;
-	private String VBOXMANAGE;// = host.getVboxManagePath();
+	private String VBOXMANAGE;
 	private ArrayList<VirtualMachine> virtalMachines = new ArrayList<>();
 	HashMap<String, String> vmNamesAndIds = new HashMap<>();
 
 	public Hypervisor(){
 		host = new HostHelper();
 		VBOXMANAGE = host.getVboxManagePath();
-		vmNamesAndIds = this.getVirtualMachinesHash();
+		vmNamesAndIds = this.getVmNamesAndUuids();
 		System.out.println(Arrays.asList(vmNamesAndIds));
 		initializeVms();
 	}
@@ -37,9 +37,8 @@ public class Hypervisor {
 
 		for (VirtualMachine vm : virtalMachines){
 			System.out.println( "-------------------------------------------------------------------------");
-			System.out.println( "VM name: "  + vm.getName() + "; id: " + vm.getId());
+			System.out.println( "VM name: "  + vm.getName() + "; id: " + vm.getId() + "; state: " + vm.getVmState() + vm.isVmStarted());
 
-//				System.out.println("snap ids: " + vm.getAllSnapshotUuids());
 			for (String uuid: vm.getAllSnapshotUuids()) {
 				if (uuid.equals("")) {
 					break;
@@ -55,7 +54,7 @@ public class Hypervisor {
 	}
 
 
-	public HashMap<String, String> getVirtualMachinesHash() {
+	public HashMap<String, String> getVmNamesAndUuids() {
 		HashMap<String, String> virtMachinesList = new HashMap<>();
 		StringBuffer stdout = null;
 		try {
