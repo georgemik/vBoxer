@@ -10,18 +10,17 @@ public class Snapshot {
 	private String description;
 
 
-	public Snapshot(){}
+	public Snapshot() {
+	}
 
-	public Snapshot(String snapshotName, String uuid, String description){
+	public Snapshot(String snapshotName, String uuid, String description) {
 		init(snapshotName, uuid);
 		setDescription(description);
 	}
 
-	public Snapshot(String snapshotName, String uuid){
+	public Snapshot(String snapshotName, String uuid) {
 		init(snapshotName, uuid);
 	}
-
-
 
 
 //	public Snapshot(VirtualMachine vm, String snapshotName){
@@ -31,13 +30,13 @@ public class Snapshot {
 //		return;
 //	}
 
-	public void init(String name, String uuid){
+	public void init(String name, String uuid) {
 		setName(name);
 		setUuid(uuid);
 	}
 
 
-	public String getName(){
+	public String getName() {
 		return name;
 	}
 
@@ -45,17 +44,19 @@ public class Snapshot {
 		return uuid;
 	}
 
-	public String getDescription(){
+	public String getDescription() {
 		return description;
 	}
 
-	public void setDescription(String desc){
+	public void setDescription(String desc) {
 		description = desc;
 	}
-	private void setName(String name){
+
+	private void setName(String name) {
 		this.name = name;
 	}
-	private void setUuid(String uuid){
+
+	private void setUuid(String uuid) {
 		this.uuid = uuid;
 	}
 

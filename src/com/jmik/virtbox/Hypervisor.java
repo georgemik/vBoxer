@@ -17,7 +17,7 @@ public class Hypervisor {
 	private ArrayList<VirtualMachine> virtalMachines = new ArrayList<>();
 	HashMap<String, String> vmNamesAndIds = new HashMap<>();
 
-	public Hypervisor(){
+	public Hypervisor() {
 		host = new HostHelper();
 		VBOXMANAGE = host.getVboxManagePath();
 		vmNamesAndIds = this.getVmNamesAndUuids();
@@ -35,11 +35,11 @@ public class Hypervisor {
 				+
 		));*/
 
-		for (VirtualMachine vm : virtalMachines){
-			System.out.println( "-------------------------------------------------------------------------");
-			System.out.println( "VM name: "  + vm.getName() + "; id: " + vm.getId() + "; state: " + vm.getVmState() + vm.isVmStarted());
+		for (VirtualMachine vm : virtalMachines) {
+			System.out.println("-------------------------------------------------------------------------");
+			System.out.println("VM name: " + vm.getName() + "; id: " + vm.getId() + "; state: " + vm.getVmState() + vm.isVmStarted());
 
-			for (String uuid: vm.getAllSnapshotUuids()) {
+			for (String uuid : vm.getAllSnapshotUuids()) {
 				if (uuid.equals("")) {
 					break;
 				}
@@ -49,7 +49,7 @@ public class Hypervisor {
 				System.out.println("	Snapshot Description:\n" + snap.getDescription());
 			}
 		}
-		System.out.println( "-------------------------------------------------------------------------");
+		System.out.println("-------------------------------------------------------------------------");
 
 	}
 
@@ -59,7 +59,7 @@ public class Hypervisor {
 		StringBuffer stdout = null;
 		try {
 			stdout = host.runSystemCommand(Arrays.asList(VBOXMANAGE, "list", "vms"));
-		}catch(IllegalArgumentException e){
+		} catch (IllegalArgumentException e) {
 			System.out.println("ERROR: System command '" + VBOXMANAGE + " list vms' cannot be executed");
 			e.printStackTrace();
 			System.exit(1);
@@ -68,13 +68,11 @@ public class Hypervisor {
 		String matcher = "\"([^\"]+)\"\\s+\\{([^}]+)\\}";
 
 		Matcher m = Pattern.compile(matcher).matcher(stdout);
-		while (m.find()){
-			   virtMachinesList.put(m.group(2), m.group(1));
+		while (m.find()) {
+			virtMachinesList.put(m.group(2), m.group(1));
 		}
 		return virtMachinesList;
 	}
-
-
 
 
 }

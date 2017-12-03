@@ -13,7 +13,7 @@ public class VirtualMachine {
 	private String state;
 	private StringBuffer vmInfo;
 
-	public VirtualMachine(String vmName, String id){
+	public VirtualMachine(String vmName, String id) {
 		name = vmName;
 		this.id = id;
 		snapshotz = setAllSnapshots();
@@ -22,33 +22,33 @@ public class VirtualMachine {
 	}
 
 
-
-	public String getName(){
+	public String getName() {
 		return name;
 	}
-	public String getId(){
+
+	public String getId() {
 		return id;
 	}
 
-	private ArrayList<Snapshot> setAllSnapshots(){
+	private ArrayList<Snapshot> setAllSnapshots() {
 		ArrayList<Snapshot> snaps = new ArrayList<>();
 		StringBuffer snapshotListStdout = new StringBuffer();
 
-		try{
+		try {
 			snapshotListStdout = host.runSystemCommand(Arrays.asList(host.getVboxManagePath(), "snapshot", id, "list"));
-		}catch (IllegalFormatException e){
+		} catch (IllegalFormatException e) {
 			System.out.println("ERROR: System command '" + host.getVboxManagePath() + " snapshot " + id + " list' cannot be executed");
 			e.printStackTrace();
 			System.exit(1);
 		}
-		if(snapshotListStdout.toString().startsWith("This machine does not have any snapshots")){
+		if (snapshotListStdout.toString().startsWith("This machine does not have any snapshots")) {
 			return null;
 		}
 
 		String[] stdoutLines = snapshotListStdout.toString().split("\\n");
 		String nameAndUuidMatcher = ".*?Name:\\s+(.*) \\(UUID: ([\\w-]+)\\)";
 
-		for(int i=0; i < stdoutLines.length ; i++){
+		for (int i = 0; i < stdoutLines.length; i++) {
 			String currentLine = stdoutLines[i];
 			String name;
 			String uuid;
@@ -56,9 +56,9 @@ public class VirtualMachine {
 			Snapshot snapshot = new Snapshot();
 
 			// If current line matches regular expression save name and uuid
-			if(currentLine.matches(".*?Name:.*?\\(UUID: [\\w-]+\\).*")){
+			if (currentLine.matches(".*?Name:.*?\\(UUID: [\\w-]+\\).*")) {
 				Matcher m = Pattern.compile(nameAndUuidMatcher).matcher(currentLine);
-				if(m.find()){
+				if (m.find()) {
 					// initialize snapshot object
 					name = m.group(1);
 					uuid = m.group(2);
@@ -66,11 +66,11 @@ public class VirtualMachine {
 				}
 			}
 			// if next line does not start with Name: but Description: pattern save whole description
-			if (i != (stdoutLines.length) - 1 && stdoutLines[i+1].matches(".*?Description:.*")){
-				i+=2; // move index to line after 'Description:' one
+			if (i != (stdoutLines.length) - 1 && stdoutLines[i + 1].matches(".*?Description:.*")) {
+				i += 2; // move index to line after 'Description:' one
 				int y = i;
 				// until line does not start with 'Name:' pattern save content to String but check array boundary
-				while(y != stdoutLines.length && !stdoutLines[y].matches(".*?Name:.*")){
+				while (y != stdoutLines.length && !stdoutLines[y].matches(".*?Name:.*")) {
 					description += stdoutLines[y] + "\n";
 					y++;
 				}
@@ -78,7 +78,7 @@ public class VirtualMachine {
 				i = y; // sync main Array index with the previous loop
 			}
 
-			if(snapshot.getName() != null){
+			if (snapshot.getName() != null) {
 				snaps.add(snapshot);
 			}
 		}
@@ -86,10 +86,10 @@ public class VirtualMachine {
 		return snaps;
 	}
 
-	public ArrayList<String> getAllSnapshotNames(){
+	public ArrayList<String> getAllSnapshotNames() {
 
-		ArrayList<String> snapshotNames= new ArrayList<>();
-		if(snapshotz == null){
+		ArrayList<String> snapshotNames = new ArrayList<>();
+		if (snapshotz == null) {
 			snapshotNames.add("");
 			return snapshotNames;
 		}
@@ -97,10 +97,10 @@ public class VirtualMachine {
 		return snapshotNames;
 	}
 
-	public ArrayList<String> getAllSnapshotUuids(){
+	public ArrayList<String> getAllSnapshotUuids() {
 
-		ArrayList<String> snapshotUuids= new ArrayList<>();
-		if(snapshotz == null){
+		ArrayList<String> snapshotUuids = new ArrayList<>();
+		if (snapshotz == null) {
 			snapshotUuids.add("");
 			return snapshotUuids;
 		}
@@ -108,21 +108,21 @@ public class VirtualMachine {
 		return snapshotUuids;
 	}
 
-	public Snapshot getSnapshotByUuid(String uuid){
-		for(Snapshot snapshot: snapshotz){
-			if (snapshot.getUuid().equals(uuid)){
+	public Snapshot getSnapshotByUuid(String uuid) {
+		for (Snapshot snapshot : snapshotz) {
+			if (snapshot.getUuid().equals(uuid)) {
 				return snapshot;
 			}
 		}
 		return null;
 	}
 
-	private StringBuffer getVmInfo(){
+	private StringBuffer getVmInfo() {
 		StringBuffer infoStdout = new StringBuffer();
 
-		try{
+		try {
 			infoStdout = host.runSystemCommand(Arrays.asList(host.getVboxManagePath(), "showvminfo", id, "--machinereadable"));
-		}catch (IllegalFormatException e){
+		} catch (IllegalFormatException e) {
 			System.out.println("ERROR: System command '" + host.getVboxManagePath() + " showvminfo " + id + " --machinereadable' cannot be executed");
 			e.printStackTrace();
 			System.exit(1);
@@ -130,51 +130,40 @@ public class VirtualMachine {
 		return infoStdout;
 	}
 
-	private void setState(){
-		if(vmInfo == null){
+	private void setState() {
+		if (vmInfo == null) {
 			return;
 		}
 //		TODO investigate why this property is not true from vboxmanage output????
 		String stateRegex = "VMState=\"(\\w+)\"";
 		Matcher match = Pattern.compile(stateRegex).matcher(vmInfo);
-		if(match.find()){
+		if (match.find()) {
 			state = match.group(1);
 		}
 	}
 
-	public String getVmState(){
-		if (state == null || state.isEmpty()){
+	public String getVmState() {
+		if (state == null || state.isEmpty()) {
 			return "";
 		}
 		return state;
 	}
 
-	public boolean isVmStarted(){
-		switch (state){
-			case ("poweroff"): { 	return false; 	}
-			case ("poweron") : {	return true;	}
-			default: return false;
+	public boolean isVmStarted() {
+		switch (state) {
+			case ("poweroff"): {
+				return false;
+			}
+			case ("poweron"): {
+				return true;
+			}
+			default:
+				return false;
 		}
 	}
 
 
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 //	private Map<String, Snapshot> snapshots = new HashMap<String, Snapshot>(25);
