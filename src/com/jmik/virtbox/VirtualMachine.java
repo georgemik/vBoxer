@@ -30,6 +30,11 @@ public class VirtualMachine {
 		return id;
 	}
 
+
+
+
+	// =========================== private methods ===========================================================
+
 	private ArrayList<Snapshot> setAllSnapshots() {
 		ArrayList<Snapshot> snaps = new ArrayList<>();
 		StringBuffer snapshotListStdout = new StringBuffer();
@@ -150,11 +155,11 @@ public class VirtualMachine {
 	}
 
 	public boolean isVmStarted() {
-		switch (state) {
+		switch (this.getVmState()) {
 			case ("poweroff"): {
 				return false;
 			}
-			case ("poweron"): {
+			case ("running"): {
 				return true;
 			}
 			default:
