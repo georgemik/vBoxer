@@ -23,6 +23,12 @@ public class Hypervisor {
 		vmNamesAndIds = this.getVmNamesAndUuids();
 		System.out.println(Arrays.asList(vmNamesAndIds));
 		initializeVms();
+
+		// ================ testing code ==================
+		startVm("kali", false);
+		isVmOn("kali");
+		poweroffVm("kali");
+
 	}
 
 
@@ -72,6 +78,28 @@ public class Hypervisor {
 			virtMachinesList.put(m.group(2), m.group(1));
 		}
 		return virtMachinesList;
+	}
+
+	private VirtualMachine getVmByName(String vmName) {
+		return virtalMachines.stream().filter(p -> p.getName().equals(vmName)).findFirst().get();
+	}
+
+
+	// ================ public methods ======================================================
+	public void startVm(String vmName, boolean headless) {
+		getVmByName(vmName).startVm(headless);
+	}
+
+	public void poweroffVm(String vmName) {
+		getVmByName(vmName).poweroffVm();
+	}
+
+
+	// ================== helper temp methods ====================================================
+	public boolean isVmOn(String vmName) {
+		boolean on = getVmByName(vmName).isVmStarted();
+		System.out.println("Is vm " + vmName + "started: " + on);
+		return on;
 	}
 
 

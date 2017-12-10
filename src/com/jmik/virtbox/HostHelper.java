@@ -46,7 +46,7 @@ public class HostHelper {
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-		if (output.toString().contains("Syntax error: Unknown ")) {
+		if (output.toString().contains("Syntax error: Unknown ") || output.toString().contains("Syntax error: unknown ")) {
 			throw new IllegalArgumentException("ERROR running command '" + cmd + "'");
 		}
 

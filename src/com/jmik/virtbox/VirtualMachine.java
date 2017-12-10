@@ -17,8 +17,7 @@ public class VirtualMachine {
 		name = vmName;
 		this.id = id;
 		snapshotz = setAllSnapshots();
-		vmInfo = getVmInfo();
-		setState();
+		loadState();
 	}
 
 
@@ -91,6 +90,36 @@ public class VirtualMachine {
 		return snaps;
 	}
 
+	private StringBuffer getVmInfo() {
+		StringBuffer infoStdout = new StringBuffer();
+
+		try {
+			infoStdout = host.runSystemCommand(Arrays.asList(host.getVboxManagePath(), "showvminfo", id, "--machinereadable"));
+		} catch (IllegalFormatException e) {
+			System.out.println("ERROR: System command '" + host.getVboxManagePath() + " showvminfo " + id + " --machinereadable' cannot be executed");
+			e.printStackTrace();
+			System.exit(1);
+		}
+		return infoStdout;
+	}
+
+	private void setState() {
+		if (vmInfo == null) {
+			return;
+		}
+//		TODO investigate why this property is not true from vboxmanage output????
+		String stateRegex = "VMState=\"(\\w+)\"";
+		Matcher match = Pattern.compile(stateRegex).matcher(vmInfo);
+		if (match.find()) {
+			state = match.group(1);
+		}
+	}
+
+	private void loadState() {
+		vmInfo = getVmInfo();
+		setState();
+	}
+
 	public ArrayList<String> getAllSnapshotNames() {
 
 		ArrayList<String> snapshotNames = new ArrayList<>();
@@ -122,32 +151,8 @@ public class VirtualMachine {
 		return null;
 	}
 
-	private StringBuffer getVmInfo() {
-		StringBuffer infoStdout = new StringBuffer();
-
-		try {
-			infoStdout = host.runSystemCommand(Arrays.asList(host.getVboxManagePath(), "showvminfo", id, "--machinereadable"));
-		} catch (IllegalFormatException e) {
-			System.out.println("ERROR: System command '" + host.getVboxManagePath() + " showvminfo " + id + " --machinereadable' cannot be executed");
-			e.printStackTrace();
-			System.exit(1);
-		}
-		return infoStdout;
-	}
-
-	private void setState() {
-		if (vmInfo == null) {
-			return;
-		}
-//		TODO investigate why this property is not true from vboxmanage output????
-		String stateRegex = "VMState=\"(\\w+)\"";
-		Matcher match = Pattern.compile(stateRegex).matcher(vmInfo);
-		if (match.find()) {
-			state = match.group(1);
-		}
-	}
-
 	public String getVmState() {
+		loadState();
 		if (state == null || state.isEmpty()) {
 			return "";
 		}
@@ -167,6 +172,17 @@ public class VirtualMachine {
 		}
 	}
 
+	public void startVm(boolean headless) {
+		String type = headless ? "headless" : "separate";
+		if (isVmStarted()) {
+			return;
+		}
+		host.runSystemCommand(Arrays.asList(host.getVboxManagePath(), "startvm", id, "--type", type));
+	}
+
+	public void poweroffVm() {
+		host.runSystemCommand(Arrays.asList(host.getVboxManagePath(), "controlvm", id, "poweroff"));
+	}
 
 }
 
