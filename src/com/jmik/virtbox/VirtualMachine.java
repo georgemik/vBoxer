@@ -184,6 +184,16 @@ public class VirtualMachine {
 		host.runSystemCommand(Arrays.asList(host.getVboxManagePath(), "controlvm", id, "poweroff"));
 	}
 
+	public void acpiPoweroffVm() {
+		host.runSystemCommand(Arrays.asList(host.getVboxManagePath(), "controlvm", id, "acpipowerbutton"));
+	}
+
+
+
+
+
+
+
 }
 
 

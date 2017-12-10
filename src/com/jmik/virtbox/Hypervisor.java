@@ -27,7 +27,9 @@ public class Hypervisor {
 		// ================ testing code ==================
 		startVm("kali", false);
 		isVmOn("kali");
-		poweroffVm("kali");
+//		poweroffVm("kali");
+		acpiPoweroffVm("kali");
+		isVmOn("kali");
 
 	}
 
@@ -92,6 +94,10 @@ public class Hypervisor {
 
 	public void poweroffVm(String vmName) {
 		getVmByName(vmName).poweroffVm();
+	}
+
+	public void acpiPoweroffVm(String vmName) {
+		getVmByName(vmName).acpiPoweroffVm();
 	}
 
 
