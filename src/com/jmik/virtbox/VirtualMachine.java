@@ -30,8 +30,6 @@ public class VirtualMachine {
 	}
 
 
-
-
 	// =========================== private methods ===========================================================
 
 	private ArrayList<Snapshot> setAllSnapshots() {
@@ -107,7 +105,7 @@ public class VirtualMachine {
 		if (vmInfo == null) {
 			return;
 		}
-//		TODO investigate why this property is not true from vboxmanage output????
+		//		TODO investigate why this property is not true from vboxmanage output????
 		String stateRegex = "VMState=\"(\\w+)\"";
 		Matcher match = Pattern.compile(stateRegex).matcher(vmInfo);
 		if (match.find()) {
@@ -118,6 +116,19 @@ public class VirtualMachine {
 	private void loadState() {
 		vmInfo = getVmInfo();
 		setState();
+	}
+
+	private Snapshot getSnapshotIfExists(String snapshotName) {
+		return snapshotz.stream().filter(s -> s.getName().equals(snapshotName)).findFirst().get();
+	}
+
+	public void revertSnapshot(String snapshotName) {
+		Snapshot toRevert = getSnapshotIfExists(snapshotName);
+
+		StringBuffer stdout = host.runSystemCommand(Arrays.asList(host.getVboxManagePath(), "snapshot", id, "restore", toRevert.getUuid()));
+		// TODO	handle exceptions when snapshot should be reverted and machine is running
+		// TODO try to handle exit codes from CMD
+		System.out.println(stdout);
 	}
 
 	public ArrayList<String> getAllSnapshotNames() {
@@ -187,11 +198,6 @@ public class VirtualMachine {
 	public void acpiPoweroffVm() {
 		host.runSystemCommand(Arrays.asList(host.getVboxManagePath(), "controlvm", id, "acpipowerbutton"));
 	}
-
-
-
-
-
 
 
 }

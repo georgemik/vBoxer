@@ -25,11 +25,12 @@ public class Hypervisor {
 		initializeVms();
 
 		// ================ testing code ==================
-		startVm("kali", false);
-		isVmOn("kali");
-//		poweroffVm("kali");
-		acpiPoweroffVm("kali");
-		isVmOn("kali");
+		startVm("ubuntu", true);
+		//	isVmOn("kali");
+		//	poweroffVm("kali");
+		//	acpiPoweroffVm("kali");
+		isVmOn("ubuntu");
+		revertSnapshot("ubuntu", "test5", false);
 
 	}
 
@@ -99,6 +100,15 @@ public class Hypervisor {
 	public void acpiPoweroffVm(String vmName) {
 		getVmByName(vmName).acpiPoweroffVm();
 	}
+
+	public void revertSnapshot(String vmName, String snapshotName, boolean powerOffFirst) {
+		if (isVmOn(vmName) && powerOffFirst) {
+			poweroffVm(vmName);
+		}
+		getVmByName(vmName).revertSnapshot(snapshotName);
+	}
+
+
 
 
 	// ================== helper temp methods ====================================================
