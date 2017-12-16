@@ -8,6 +8,7 @@ public class Snapshot {
 	private String name;
 	private String uuid;
 	private String description;
+	private boolean isActive;
 
 
 	public Snapshot() {
@@ -35,6 +36,11 @@ public class Snapshot {
 		setUuid(uuid);
 	}
 
+	public void init(String name, String uuid, boolean isActive) {
+		setName(name);
+		setUuid(uuid);
+		setActiveState(isActive);
+	}
 
 	public String getName() {
 		return name;
@@ -48,6 +54,10 @@ public class Snapshot {
 		return description;
 	}
 
+	public boolean isActive() {
+		return isActive;
+	}
+
 	public void setDescription(String desc) {
 		description = desc;
 	}
@@ -58,6 +68,10 @@ public class Snapshot {
 
 	private void setUuid(String uuid) {
 		this.uuid = uuid;
+	}
+
+	private void setActiveState(boolean isActive) {
+		this.isActive = isActive;
 	}
 
 

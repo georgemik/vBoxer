@@ -36,24 +36,18 @@ public class VirtualMachine {
 		ArrayList<Snapshot> snaps = new ArrayList<>();
 		StringBuffer snapshotListStdout = new StringBuffer();
 
-		try {
-			snapshotListStdout = host.runSystemCommand(Arrays.asList(host.getVboxManagePath(), "snapshot", id, "list"));
-		} catch (IllegalFormatException e) {
-			System.out.println("ERROR: System command '" + host.getVboxManagePath() + " snapshot " + id + " list' cannot be executed");
-			e.printStackTrace();
-			System.exit(1);
-		}
-		if (snapshotListStdout.toString().startsWith("This machine does not have any snapshots")) {
+		snapshotListStdout = host.runSystemCommand(Arrays.asList(host.getVboxManagePath(), "snapshot", id, "list"));
+		if (snapshotListStdout == null) {
 			return null;
 		}
-
 		String[] stdoutLines = snapshotListStdout.toString().split("\\n");
-		String nameAndUuidMatcher = ".*?Name:\\s+(.*) \\(UUID: ([\\w-]+)\\)";
+		String nameAndUuidMatcher = ".*?Name:\\s+(.*) \\(UUID: ([\\w-]+)\\)(.*)";
 
 		for (int i = 0; i < stdoutLines.length; i++) {
 			String currentLine = stdoutLines[i];
 			String name;
 			String uuid;
+			boolean active = false;
 			String description = "";
 			Snapshot snapshot = new Snapshot();
 
@@ -64,7 +58,11 @@ public class VirtualMachine {
 					// initialize snapshot object
 					name = m.group(1);
 					uuid = m.group(2);
-					snapshot.init(name, uuid);
+					if (!m.group(3).isEmpty() && m.group(3).matches("\\s+\\*")) {
+						System.out.println("active");
+						active = true;
+					}
+					snapshot.init(name, uuid, active);
 				}
 			}
 			// if next line does not start with Name: but Description: pattern save whole description
@@ -77,7 +75,7 @@ public class VirtualMachine {
 					y++;
 				}
 				snapshot.setDescription(description);
-				i = y; // sync main Array index with the previous loop
+				i = y - 1; // sync main Array index with the previous loop
 			}
 
 			if (snapshot.getName() != null) {
@@ -91,11 +89,14 @@ public class VirtualMachine {
 	private StringBuffer getVmInfo() {
 		StringBuffer infoStdout = new StringBuffer();
 
-		try {
-			infoStdout = host.runSystemCommand(Arrays.asList(host.getVboxManagePath(), "showvminfo", id, "--machinereadable"));
-		} catch (IllegalFormatException e) {
+		//		try {
+		infoStdout = host.runSystemCommand(Arrays.asList(host.getVboxManagePath(), "showvminfo", id, "--machinereadable"));
+		//		} catch (IllegalFormatException e) {
+		//			System.out.println("ERROR: System command '" + host.getVboxManagePath() + " showvminfo " + id + " --machinereadable' cannot be executed");
+		//			e.printStackTrace();
+		//			System.exit(1);
+		if (infoStdout == null) {
 			System.out.println("ERROR: System command '" + host.getVboxManagePath() + " showvminfo " + id + " --machinereadable' cannot be executed");
-			e.printStackTrace();
 			System.exit(1);
 		}
 		return infoStdout;
@@ -119,16 +120,19 @@ public class VirtualMachine {
 	}
 
 	private Snapshot getSnapshotIfExists(String snapshotName) {
-		return snapshotz.stream().filter(s -> s.getName().equals(snapshotName)).findFirst().get();
+		return snapshotz.stream().filter(s -> s.getName().equals(snapshotName)).findFirst().orElse(null);
 	}
+
+
+	//	============== public ===========
 
 	public void revertSnapshot(String snapshotName) {
 		Snapshot toRevert = getSnapshotIfExists(snapshotName);
-
-		StringBuffer stdout = host.runSystemCommand(Arrays.asList(host.getVboxManagePath(), "snapshot", id, "restore", toRevert.getUuid()));
-		// TODO	handle exceptions when snapshot should be reverted and machine is running
-		// TODO try to handle exit codes from CMD
-		System.out.println(stdout);
+		if (toRevert == null) {
+			System.out.println("WARN: Snapshot '" + snapshotName + "' doesn't exist");
+			return;
+		}
+		host.runSystemCommand(Arrays.asList(host.getVboxManagePath(), "snapshot", id, "restore", toRevert.getUuid()));
 	}
 
 	public ArrayList<String> getAllSnapshotNames() {
@@ -202,17 +206,3 @@ public class VirtualMachine {
 
 }
 
-
-//	private Map<String, Snapshot> snapshots = new HashMap<String, Snapshot>(25);
-//	public VirtualMachine(String vmName){
-//		name = vmName;
-//		System.out.println(vmName + "Created");
-//
-////		parties.put("snap1", new Snapshot("s1")); // all anonymously added
-////		parties.put("snap2", new Snapshot("s12"));
-////		parties.put("snap2", new Snapshot("s13"));
-////		parties.put("snap5", new Snapshot(this, "s13"));
-////		parties.put("snap5", new Snapshot(this, "s14"));
-////		parties.put("snap5", new Snapshot(this, "s16"));
-//
-//	}

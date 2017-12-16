@@ -25,12 +25,12 @@ public class Hypervisor {
 		initializeVms();
 
 		// ================ testing code ==================
-		startVm("ubuntu", true);
+//		startVm("ubuntu", true);
 		//	isVmOn("kali");
 		//	poweroffVm("kali");
 		//	acpiPoweroffVm("kali");
 		isVmOn("ubuntu");
-		revertSnapshot("ubuntu", "test5", false);
+		revertSnapshot("ubuntu", "test1", true);
 
 	}
 
@@ -43,7 +43,6 @@ public class Hypervisor {
 				+ "snap: " + v.getAllSnapshotNames().forEach( (k) -> );
 				+
 		));*/
-
 		for (VirtualMachine vm : virtalMachines) {
 			System.out.println("-------------------------------------------------------------------------");
 			System.out.println("VM name: " + vm.getName() + "; id: " + vm.getId() + "; state: " + vm.getVmState() + vm.isVmStarted());
@@ -55,6 +54,7 @@ public class Hypervisor {
 				Snapshot snap = vm.getSnapshotByUuid(uuid);
 				System.out.println("	Snapshot Name: " + snap.getName());
 				System.out.println("	Snapshot UUID: " + snap.getUuid());
+				System.out.println("	Snapshot active: " + snap.isActive());
 				System.out.println("	Snapshot Description:\n" + snap.getDescription());
 			}
 		}
@@ -63,12 +63,12 @@ public class Hypervisor {
 	}
 
 
-	public HashMap<String, String> getVmNamesAndUuids() {
+	private HashMap<String, String> getVmNamesAndUuids() {
 		HashMap<String, String> virtMachinesList = new HashMap<>();
 		StringBuffer stdout = null;
 		try {
 			stdout = host.runSystemCommand(Arrays.asList(VBOXMANAGE, "list", "vms"));
-		} catch (IllegalArgumentException e) {
+		} catch (Exception e) {
 			System.out.println("ERROR: System command '" + VBOXMANAGE + " list vms' cannot be executed");
 			e.printStackTrace();
 			System.exit(1);
@@ -102,8 +102,13 @@ public class Hypervisor {
 	}
 
 	public void revertSnapshot(String vmName, String snapshotName, boolean powerOffFirst) {
-		if (isVmOn(vmName) && powerOffFirst) {
-			poweroffVm(vmName);
+		if (isVmOn(vmName)) {
+			if (powerOffFirst) {
+				poweroffVm(vmName);
+			} else {
+				System.out.println("WARN: Machine " + vmName + " is running, cannot revert snapshot");
+				return;
+			}
 		}
 		getVmByName(vmName).revertSnapshot(snapshotName);
 	}
