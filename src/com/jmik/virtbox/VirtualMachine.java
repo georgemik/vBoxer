@@ -208,7 +208,7 @@ public class VirtualMachine {
 				return s.getName();
 			}
 		}
-		return "";
+		return "NONE";
 	}
 
 }
