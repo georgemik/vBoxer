@@ -59,7 +59,6 @@ public class VirtualMachine {
 					name = m.group(1);
 					uuid = m.group(2);
 					if (!m.group(3).isEmpty() && m.group(3).matches("\\s+\\*")) {
-						System.out.println("active");
 						active = true;
 					}
 					snapshot.init(name, uuid, active);
@@ -89,12 +88,8 @@ public class VirtualMachine {
 	private StringBuffer getVmInfo() {
 		StringBuffer infoStdout = new StringBuffer();
 
-		//		try {
 		infoStdout = host.runSystemCommand(Arrays.asList(host.getVboxManagePath(), "showvminfo", id, "--machinereadable"));
-		//		} catch (IllegalFormatException e) {
-		//			System.out.println("ERROR: System command '" + host.getVboxManagePath() + " showvminfo " + id + " --machinereadable' cannot be executed");
-		//			e.printStackTrace();
-		//			System.exit(1);
+
 		if (infoStdout == null) {
 			System.out.println("ERROR: System command '" + host.getVboxManagePath() + " showvminfo " + id + " --machinereadable' cannot be executed");
 			System.exit(1);
@@ -203,6 +198,18 @@ public class VirtualMachine {
 		host.runSystemCommand(Arrays.asList(host.getVboxManagePath(), "controlvm", id, "acpipowerbutton"));
 	}
 
+	public String getActiveSnapshotName() {
+
+		if (snapshotz == null)
+			return "NONE";
+
+		for (Snapshot s : snapshotz) {
+			if (s.isActive()) {
+				return s.getName();
+			}
+		}
+		return "";
+	}
 
 }
 

@@ -15,7 +15,7 @@ public class Hypervisor {
 	private HostHelper host;
 	private String VBOXMANAGE;
 	private ArrayList<VirtualMachine> virtalMachines = new ArrayList<>();
-	HashMap<String, String> vmNamesAndIds = new HashMap<>();
+	private HashMap<String, String> vmNamesAndIds;
 
 	public Hypervisor() {
 		host = new HostHelper();
@@ -26,16 +26,22 @@ public class Hypervisor {
 
 		// ================ testing code ==================
 //		startVm("ubuntu", true);
-		//	isVmOn("kali");
-		//	poweroffVm("kali");
-		//	acpiPoweroffVm("kali");
-		isVmOn("ubuntu");
-		revertSnapshot("ubuntu", "test1", true);
+//		isVmOn("kali");
+//		poweroffVm("kali");
+//
+//		//	acpiPoweroffVm("kali");
+//		isVmOn("ubuntu");
+//		revertSnapshot("ubuntu", "test1", true);
+
+		System.out.println("machine ubuntu active snapshot:");
+		System.out.println(getVmByName("parrot").getName());
+		System.out.println(getVmByName("parrot").getActiveSnapshotName());
 
 	}
 
 
 	private void initializeVms() {
+
 		vmNamesAndIds.forEach((k, v) -> virtalMachines.add(new VirtualMachine(v, k)));
 /*		virtalMachines.forEach( (v) -> System.out.println(
 				"VM name:"  +v.getName()
