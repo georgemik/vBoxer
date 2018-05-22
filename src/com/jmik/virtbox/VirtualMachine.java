@@ -18,6 +18,7 @@ public class VirtualMachine {
 		this.id = id;
 		snapshotz = setAllSnapshots();
 		loadState();
+
 	}
 
 
@@ -38,18 +39,20 @@ public class VirtualMachine {
 
 		snapshotListStdout = host.runSystemCommand(Arrays.asList(host.getVboxManagePath(), "snapshot", id, "list"));
 		if (snapshotListStdout == null) {
-			return null;
+			snaps.add(NullSnapshot.getInstance());
+			return snaps;
 		}
+
 		String[] stdoutLines = snapshotListStdout.toString().split("\\n");
 		String nameAndUuidMatcher = ".*?Name:\\s+(.*) \\(UUID: ([\\w-]+)\\)(.*)";
 
 		for (int i = 0; i < stdoutLines.length; i++) {
 			String currentLine = stdoutLines[i];
-			String name;
-			String uuid;
+			String name = null;
+			String uuid = null;
 			boolean active = false;
 			String description = "";
-			Snapshot snapshot = new Snapshot();
+//			SnapshotImpl snapshot = new SnapshotImpl();
 
 			// If current line matches regular expression save name and uuid
 			if (currentLine.matches(".*?Name:.*?\\(UUID: [\\w-]+\\).*")) {
@@ -61,7 +64,7 @@ public class VirtualMachine {
 					if (!m.group(3).isEmpty() && m.group(3).matches("\\s+\\*")) {
 						active = true;
 					}
-					snapshot.init(name, uuid, active);
+//					snapshot.init(name, uuid, active);
 				}
 			}
 			// if next line does not start with Name: but Description: pattern save whole description
@@ -73,12 +76,15 @@ public class VirtualMachine {
 					description += stdoutLines[y] + "\n";
 					y++;
 				}
-				snapshot.setDescription(description);
+//				snapshot.setDescription(description);
 				i = y - 1; // sync main Array index with the previous loop
 			}
 
-			if (snapshot.getName() != null) {
+			if (name != null && uuid != null) {
+				Snapshot snapshot = new SnapshotImpl(name, uuid, active, description);
 				snaps.add(snapshot);
+			} else {
+				snaps.add(NullSnapshot.getInstance());
 			}
 		}
 
@@ -122,12 +128,12 @@ public class VirtualMachine {
 	//	============== public ===========
 
 	public void revertSnapshot(String snapshotName) {
-		Snapshot toRevert = getSnapshotIfExists(snapshotName);
-		if (toRevert == null) {
+		Snapshot snapshotToRevert = getSnapshotIfExists(snapshotName);
+		if (snapshotToRevert.isNull()) {
 			System.out.println("WARN: Snapshot '" + snapshotName + "' doesn't exist");
 			return;
 		}
-		host.runSystemCommand(Arrays.asList(host.getVboxManagePath(), "snapshot", id, "restore", toRevert.getUuid()));
+		host.runSystemCommand(Arrays.asList(host.getVboxManagePath(), "snapshot", id, "restore", snapshotToRevert.getUuid()));
 	}
 
 	public ArrayList<String> getAllSnapshotNames() {
@@ -158,7 +164,7 @@ public class VirtualMachine {
 				return snapshot;
 			}
 		}
-		return null;
+		return NullSnapshot.getInstance();
 	}
 
 	public String getVmState() {
@@ -198,17 +204,27 @@ public class VirtualMachine {
 		host.runSystemCommand(Arrays.asList(host.getVboxManagePath(), "controlvm", id, "acpipowerbutton"));
 	}
 
+	public boolean isAnySnapshotTaken() {
+		if (snapshotz != null && snapshotz.size() == 1 && snapshotz.get(0).isNull() ) {
+			return false;
+		} else {
+			return true;
+		}
+	}
+
 	public String getActiveSnapshotName() {
 
-		if (snapshotz == null)
-			return "NONE";
+		if(!isAnySnapshotTaken()) {
+			return NullSnapshot.getInstance().getName();
+		}
 
 		for (Snapshot s : snapshotz) {
-			if (s.isActive()) {
+
+			if (!s.isNull() && s.isActive()) {
 				return s.getName();
 			}
 		}
-		return "NONE";
+		return NullSnapshot.getInstance().getName();
 	}
 
 }
