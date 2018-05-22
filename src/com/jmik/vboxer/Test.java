@@ -1,4 +1,4 @@
-package com.jmik.virtbox;
+package com.jmik.vboxer;
 
 
 /**

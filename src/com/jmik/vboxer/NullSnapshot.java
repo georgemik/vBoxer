@@ -1,4 +1,4 @@
-package com.jmik.virtbox;
+package com.jmik.vboxer;
 
 /**
  * Created by gerogemik on 22.5.2018.

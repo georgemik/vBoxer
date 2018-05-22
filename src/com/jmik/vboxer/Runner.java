@@ -1,5 +1,5 @@
-package com.jmik.virtbox;
-import java.util.*;
+package com.jmik.vboxer;
+
 /**
  * Created by georgemik on 27.8.2017.
  */
