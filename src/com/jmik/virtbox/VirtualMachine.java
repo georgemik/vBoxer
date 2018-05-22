@@ -18,9 +18,7 @@ public class VirtualMachine {
 		this.id = id;
 		snapshotz = setAllSnapshots();
 		loadState();
-
 	}
-
 
 	public String getName() {
 		return name;
@@ -28,112 +26,6 @@ public class VirtualMachine {
 
 	public String getId() {
 		return id;
-	}
-
-
-	// =========================== private methods ===========================================================
-
-	private ArrayList<Snapshot> setAllSnapshots() {
-		ArrayList<Snapshot> snaps = new ArrayList<>();
-		StringBuffer snapshotListStdout = new StringBuffer();
-
-		snapshotListStdout = host.runSystemCommand(Arrays.asList(host.getVboxManagePath(), "snapshot", id, "list"));
-		if (snapshotListStdout == null) {
-			snaps.add(NullSnapshot.getInstance());
-			return snaps;
-		}
-
-		String[] stdoutLines = snapshotListStdout.toString().split("\\n");
-		String nameAndUuidMatcher = ".*?Name:\\s+(.*) \\(UUID: ([\\w-]+)\\)(.*)";
-
-		for (int i = 0; i < stdoutLines.length; i++) {
-			String currentLine = stdoutLines[i];
-			String name = null;
-			String uuid = null;
-			boolean active = false;
-			String description = "";
-//			SnapshotImpl snapshot = new SnapshotImpl();
-
-			// If current line matches regular expression save name and uuid
-			if (currentLine.matches(".*?Name:.*?\\(UUID: [\\w-]+\\).*")) {
-				Matcher m = Pattern.compile(nameAndUuidMatcher).matcher(currentLine);
-				if (m.find()) {
-					// initialize snapshot object
-					name = m.group(1);
-					uuid = m.group(2);
-					if (!m.group(3).isEmpty() && m.group(3).matches("\\s+\\*")) {
-						active = true;
-					}
-//					snapshot.init(name, uuid, active);
-				}
-			}
-			// if next line does not start with Name: but Description: pattern save whole description
-			if (i != (stdoutLines.length) - 1 && stdoutLines[i + 1].matches(".*?Description:.*")) {
-				i += 2; // move index to line after 'Description:' one
-				int y = i;
-				// until line does not start with 'Name:' pattern save content to String but check array boundary
-				while (y != stdoutLines.length && !stdoutLines[y].matches(".*?Name:.*")) {
-					description += stdoutLines[y] + "\n";
-					y++;
-				}
-//				snapshot.setDescription(description);
-				i = y - 1; // sync main Array index with the previous loop
-			}
-
-			if (name != null && uuid != null) {
-				Snapshot snapshot = new SnapshotImpl(name, uuid, active, description);
-				snaps.add(snapshot);
-			} else {
-				snaps.add(NullSnapshot.getInstance());
-			}
-		}
-
-		return snaps;
-	}
-
-	private StringBuffer getVmInfo() {
-		StringBuffer infoStdout = new StringBuffer();
-
-		infoStdout = host.runSystemCommand(Arrays.asList(host.getVboxManagePath(), "showvminfo", id, "--machinereadable"));
-
-		if (infoStdout == null) {
-			System.out.println("ERROR: System command '" + host.getVboxManagePath() + " showvminfo " + id + " --machinereadable' cannot be executed");
-			System.exit(1);
-		}
-		return infoStdout;
-	}
-
-	private void setState() {
-		if (vmInfo == null) {
-			return;
-		}
-		//		TODO investigate why this property is not true from vboxmanage output????
-		String stateRegex = "VMState=\"(\\w+)\"";
-		Matcher match = Pattern.compile(stateRegex).matcher(vmInfo);
-		if (match.find()) {
-			state = match.group(1);
-		}
-	}
-
-	private void loadState() {
-		vmInfo = getVmInfo();
-		setState();
-	}
-
-	private Snapshot getSnapshotIfExists(String snapshotName) {
-		return snapshotz.stream().filter(s -> s.getName().equals(snapshotName)).findFirst().orElse(null);
-	}
-
-
-	//	============== public ===========
-
-	public void revertSnapshot(String snapshotName) {
-		Snapshot snapshotToRevert = getSnapshotIfExists(snapshotName);
-		if (snapshotToRevert.isNull()) {
-			System.out.println("WARN: Snapshot '" + snapshotName + "' doesn't exist");
-			return;
-		}
-		host.runSystemCommand(Arrays.asList(host.getVboxManagePath(), "snapshot", id, "restore", snapshotToRevert.getUuid()));
 	}
 
 	public ArrayList<String> getAllSnapshotNames() {
@@ -188,6 +80,15 @@ public class VirtualMachine {
 		}
 	}
 
+	public void revertSnapshot(String snapshotName) {
+		Snapshot snapshotToRevert = getSnapshotIfExists(snapshotName);
+		if (snapshotToRevert.isNull()) {
+			System.out.println("WARN: Snapshot '" + snapshotName + "' doesn't exist");
+			return;
+		}
+		host.runSystemCommand(Arrays.asList(host.getVboxManagePath(), "snapshot", id, "restore", snapshotToRevert.getUuid()));
+	}
+
 	public void startVm(boolean headless) {
 		String type = headless ? "headless" : "separate";
 		if (isVmStarted()) {
@@ -204,14 +105,6 @@ public class VirtualMachine {
 		host.runSystemCommand(Arrays.asList(host.getVboxManagePath(), "controlvm", id, "acpipowerbutton"));
 	}
 
-	public boolean isAnySnapshotTaken() {
-		if (snapshotz != null && snapshotz.size() == 1 && snapshotz.get(0).isNull() ) {
-			return false;
-		} else {
-			return true;
-		}
-	}
-
 	public String getActiveSnapshotName() {
 
 		if(!isAnySnapshotTaken()) {
@@ -226,6 +119,102 @@ public class VirtualMachine {
 		}
 		return NullSnapshot.getInstance().getName();
 	}
+
+
+	// =========================== private methods ===========================================================
+
+	private boolean isAnySnapshotTaken() {
+		return (snapshotz != null && snapshotz.size() == 1 && snapshotz.get(0).isNull());
+	}
+
+	private ArrayList<Snapshot> setAllSnapshots() {
+		ArrayList<Snapshot> snaps = new ArrayList<>();
+		StringBuffer snapshotListStdout = new StringBuffer();
+
+		snapshotListStdout = host.runSystemCommand(Arrays.asList(host.getVboxManagePath(), "snapshot", id, "list"));
+		if (snapshotListStdout == null) {
+			snaps.add(NullSnapshot.getInstance());
+			return snaps;
+		}
+
+		String[] stdoutLines = snapshotListStdout.toString().split("\\n");
+		String nameAndUuidMatcher = ".*?Name:\\s+(.*) \\(UUID: ([\\w-]+)\\)(.*)";
+
+		for (int i = 0; i < stdoutLines.length; i++) {
+			String currentLine = stdoutLines[i];
+			String name = null;
+			String uuid = null;
+			boolean active = false;
+			String description = "";
+
+			// If current line matches regular expression save name and uuid
+			if (currentLine.matches(".*?Name:.*?\\(UUID: [\\w-]+\\).*")) {
+				Matcher m = Pattern.compile(nameAndUuidMatcher).matcher(currentLine);
+				if (m.find()) {
+					// initialize snapshot object
+					name = m.group(1);
+					uuid = m.group(2);
+					if (!m.group(3).isEmpty() && m.group(3).matches("\\s+\\*")) {
+						active = true;
+					}
+				}
+			}
+			// if next line does not start with Name: but Description: pattern save whole description
+			if (i != (stdoutLines.length) - 1 && stdoutLines[i + 1].matches(".*?Description:.*")) {
+				i += 2; // move index to line after 'Description:' one
+				int y = i;
+				// until line does not start with 'Name:' pattern save content to String but check array boundary
+				while (y != stdoutLines.length && !stdoutLines[y].matches(".*?Name:.*")) {
+					description += stdoutLines[y] + "\n";
+					y++;
+				}
+				i = y - 1; // sync main Array index with the previous loop
+			}
+
+			if (name != null && uuid != null) {
+				Snapshot snapshot = new SnapshotImpl(name, uuid, active, description);
+				snaps.add(snapshot);
+			} else {
+				snaps.add(NullSnapshot.getInstance());
+			}
+		}
+
+		return snaps;
+	}
+
+	private StringBuffer getVmInfo() {
+		StringBuffer infoStdout = new StringBuffer();
+
+		infoStdout = host.runSystemCommand(Arrays.asList(host.getVboxManagePath(), "showvminfo", id, "--machinereadable"));
+
+		if (infoStdout == null) {
+			System.out.println("ERROR: System command '" + host.getVboxManagePath() + " showvminfo " + id + " --machinereadable' cannot be executed");
+			System.exit(1);
+		}
+		return infoStdout;
+	}
+
+	private void setState() {
+		if (vmInfo == null) {
+			return;
+		}
+		//		TODO investigate why this property is not true from vboxmanage output????
+		String stateRegex = "VMState=\"(\\w+)\"";
+		Matcher match = Pattern.compile(stateRegex).matcher(vmInfo);
+		if (match.find()) {
+			state = match.group(1);
+		}
+	}
+
+	private void loadState() {
+		vmInfo = getVmInfo();
+		setState();
+	}
+
+	private Snapshot getSnapshotIfExists(String snapshotName) {
+		return snapshotz.stream().filter(s -> s.getName().equals(snapshotName)).findFirst().orElse(null);
+	}
+
 
 }
 
